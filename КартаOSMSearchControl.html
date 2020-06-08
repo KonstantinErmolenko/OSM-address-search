@@ -33,10 +33,13 @@
             markers.addTo(map);
 
             // Search control
-            const search = new GeoSearch.GeoSearchControl({
+
+            const provider = new GeoSearch.OpenStreetMapProvider();
+            const searchControl = new GeoSearch.GeoSearchControl({
+                style: 'bar',
                 provider: new GeoSearch.OpenStreetMapProvider(),
             });
-            map.addControl(search);
+            map.addControl(searchControl);
             
         }
 
