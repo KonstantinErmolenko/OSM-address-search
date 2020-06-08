@@ -1,44 +1,89 @@
-/<html>
-
+<html>
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=9" />
-
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css"/>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-geosearch@3.0.0/dist/geosearch.css"/>
-
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=9"/>
+    <link href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css" rel="stylesheet"/>
     <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-editable@1.2.0/src/Leaflet.Editable.js"></script>
-    <script src="https://unpkg.com/leaflet-geosearch@3.0.0/dist/geosearch.umd.js"></script>
 </head>
-
 <body onload="init()">
     <script type="text/javascript">
-       
-        var map;
+            var myMap;
+            var myLayerGroupMarkers;
 
-        function init() {
+            var iconUrl	= 'http://pngimg.com/uploads/gps/gps_PNG12.png';
+            var iconUrlChosen = 'http://pngimg.com/uploads/gps/gps_PNG22.png';
+            var markerSelected  = new L.latLng(0, 0);
 
-            const coord = [59.927, 30.3555];
-            const map = L.map('map').setView(coord, 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            function init() {
+                myLayerGroupMarkers = new L.LayerGroup();
+
+                myMap = L.map('map', {editable: true});
+                myMap.setView(['Широта', 'Долгота'], 13);
+                myMap.on('click', onMapClick);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>'
-                }).addTo(map);
-           
-            //const provider = new GeoSearch.OpenStreetMapProvider();
-            const search = new GeoSearch.GeoSearchControl({
-                provider: new GeoSearch.OpenStreetMapProvider(),
-            });
-            map.addControl(search);
-            
-        }
+                }).addTo(myMap);
+                myLayerGroupMarkers.addTo(myMap);
+            }
 
+            function onMapClick(e) {
+                 var marker = L.marker([e.latlng.lat, e.latlng.lng], {title: 'Клиент'});
+                 marker.addTo(myLayerGroupMarkers);
+                 marker.on('click', onClientMarkerClick);
+            }
+            
+            function onClientMarkerClick(event) {
+                var marker = event.target;
+                myLayerGroupMarkers.removeLayer(marker);
+            }
+
+            function onMarkerClick(event) {
+                var marker = event.target;
+                var position = marker.getLatLng();
+                myMap.panTo([position.lat, position.lng]);
+                redrawMarkers(position.lat, position.lng);                
+
+                call1C('ВыборТочки', [position.lat, position.lng]);
+            }
+
+            function call1C(evtName,evtData){
+                document.getElementById('message_name').innerHTML  = evtName;
+                document.getElementById('message_data').innerHTML  = evtData;
+            }
+            
+           function redrawMarkers(lat, lng) {
+                myLayerGroupMarkers.eachLayer(function (marker) {
+                    position = marker.getLatLng()
+
+                   if (position.lat == lat && position.lng == lng) {
+                        marker.setIcon(L.icon({iconUrl: iconUrlChosen, iconSize: [51, 51], iconAnchor: [25, 0]}));
+                    } else if (position.lat == markerSelected.lat && position.lng == markerSelected.lng) {
+                        marker.setIcon(L.icon({iconUrl: iconUrl, iconSize: [51, 51], iconAnchor: [25, 0]}));
+                    }
+                });
+
+                markerSelected.lat = lat;
+                markerSelected.lng = lng;
+            }
+            
+            function selectMarker(lat, lng) {
+                myMap.panTo([lat, lng]);
+                redrawMarkers(lat, lng);
+                
+                // Активируем всплывающее окно над выбранной точкой
+                myLayerGroupMarkers.eachLayer(function (marker) {
+                    markerPosition = marker.getLatLng();
+                    if (markerPosition.lat == lat && markerPosition.lng == lng) {
+                        marker.openPopup();
+                    }
+                });
+            }
     </script>
-    <div tabindex="0" class="map" id="map" style="left: 0px; top: 0px; right: 0px; bottom: 0px; position: absolute;">
-    </div>
+    <div tabindex="0" class="map" id="map" style="left: 0px; top: 0px; right: 0px; bottom: 0px; position: absolute;"></div>
     <div id='message_name' style='display: none'></div>
     <div id='message_data' style='display: none'></div>
     <div id="Controller"></div>
 </body>
-
 </html>
